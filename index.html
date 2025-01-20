@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nature Recycling App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+    <img src="recycle.jpg" alt="App Icon" style="width:50px; vertical-align: middle; margin-right: 10px;">
+    <h1 style="display: inline;">Nature Recycling App</h1>
+</header>
+
+
+<div id="login" class="container section">
+    <form id="loginForm">
+        <label for="phoneNumber">Phone Number:</label>
+        <input type="text" id="phoneNumber" placeholder="Enter your 10-digit phone number" required>
+
+        <button class="hover-button" type="submit">Login</button>
+    </form>
+
+    <div id="loginStatusMessage"></div>
+</div>
+
+<div id="sidebar">
+    <nav id="mainNav" style="display: none;">
+        <button class="hover-button" onclick="showSection('wasteManagement')">Waste Management</button>
+        <button class="hover-button" onclick="showSection('fundraiser')">Fundraiser</button>
+    </nav>
+</div>
+
+<div id="content">
+    <div id="wasteManagement" class="container section" style="display: none;">
+        <form id="wasteForm">
+            <label for="wasteImage">Upload Waste Image:</label>
+            <input type="file" id="wasteImage" accept="image/*" required>
+
+            <label for="location">Location:</label>
+            <input type="text" id="location" placeholder="Enter or detect location" required>
+
+            <button class="hover-button" type="submit">Submit</button>
+        </form>
+
+        <div id="statusMessage"></div>
+
+        <div id="map" class="map"></div>
+    </div>
+
+    <div id="fundraiser" class="container section" style="display: none;">
+        <form id="fundraiserForm">
+            <label for="cashAmount">Cash Amount Paid:</label>
+            <input type="number" id="cashAmount" placeholder="Enter amount" required>
+
+            <label for="receiptImage">Upload Receipt Image:</label>
+            <input type="file" id="receiptImage" accept="image/*" required>
+
+            <button class="hover-button" type="submit">Submit</button>
+        </form>
+
+        <div id="fundraiserStatusMessage"></div>
+    </div>
+</div>
+
+<script>
+    function showSection(sectionId) {
+        document.querySelectorAll('.section').forEach(section => {
+            section.style.display = 'none';
+        });
+        document.getElementById(sectionId).style.display = 'block';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const phoneNumber = document.getElementById('phoneNumber').value;
+        const loginStatusMessage = document.getElementById('loginStatusMessage');
+
+        if (!/^[0-9]{10}$/.test(phoneNumber)) {
+            loginStatusMessage.textContent = 'Please enter a valid 10-digit phone number.';
+            loginStatusMessage.style.color = 'red';
+            return;
+        }
+
+        loginStatusMessage.textContent = 'Login successful!';
+        loginStatusMessage.style.color = 'green';
+
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('mainNav').style.display = 'block';
+        document.getElementById('wasteManagement').style.display = 'block';
+    });
+
+    document.getElementById('wasteForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('wasteImage');
+        const locationInput = document.getElementById('location');
+        const statusMessage = document.getElementById('statusMessage');
+
+        if (fileInput.files.length === 0 || !locationInput.value) {
+            alert('Please provide both an image and location.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        formData.append('location', locationInput.value);
+
+        try {
+            const response = await fetch('http://localhost:5000/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                statusMessage.textContent = 'Waste data submitted successfully!';
+                statusMessage.style.color = 'green';
+            } else {
+                throw new Error('Failed to submit waste data.');
+            }
+        } catch (error) {
+            statusMessage.textContent = error.message;
+            statusMessage.style.color = 'red';
+        }
+    });
+
+    document.getElementById('fundraiserForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const cashAmount = document.getElementById('cashAmount').value;
+        const receiptImage = document.getElementById('receiptImage').files[0];
+        const fundraiserStatusMessage = document.getElementById('fundraiserStatusMessage');
+
+        if (!cashAmount || !receiptImage) {
+            alert('Please provide both cash amount and receipt image.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('cashAmount', cashAmount);
+        formData.append('receiptImage', receiptImage);
+
+        try {
+            const response = await fetch('http://localhost:5000/fundraiser', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                fundraiserStatusMessage.textContent = 'Fundraiser data submitted successfully!';
+                fundraiserStatusMessage.style.color = 'green';
+            } else {
+                throw new Error('Failed to submit fundraiser data.');
+            }
+        } catch (error) {
+            fundraiserStatusMessage.textContent = error.message;
+            fundraiserStatusMessage.style.color = 'red';
+        }
+    });
+</script>
+
+</body>
+</html>
